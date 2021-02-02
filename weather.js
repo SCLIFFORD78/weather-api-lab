@@ -1,32 +1,38 @@
 const apiKey = "f33068d3d58af2a1629e8e31ceeaddcc";
-var location_id = ''
 
 
-
-
-function renderCell(row, col, value) {
-    const cell = row.insertCell(col);
-    cell.innerHTML = value;
-  }
-  
-  async function renderWeather(report) {
-    const table = document.getElementById("weather-table");
-    const row = table.insertRow(-1);
-    renderCell(row, 0, report.feelsLike);
-    renderCell(row,1, report.clouds);
-    renderCell(row,2, report.windSpeed);
-    renderCell(row,3, report.windDirection);
-    renderCell(row,4, report.visibility);
-    renderCell(row,5, report.humidity);
-  }
-  
-  async function fetchWeather() {
-    let weather = {};
-    location_id = document.getElementById("location-id").value;
-    const response = await axios.get("http://api.openweathermap.org/data/2.5/weather?q="+location_id+",Ireland&appid="+apiKey)
+async function readWeather(location) {
+  let weather = null;
+  const weatherRequest = `http://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}`;
+  try {
+    const response = await axios.get(weatherRequest);
     if (response.status == 200) {
       weather = response.data
     }
+  } catch (error) {
+    console.log(error);
+  }
+  return weather;
+}
+function renderCell(row, col, value) {
+  const cell = row.insertCell(col);
+  cell.innerHTML = value;
+}
+async function renderWeather(report) {
+  const table = document.getElementById("weather-table");
+  const row = table.insertRow(-1);
+  renderCell(row, 0, report.feelsLike);
+  renderCell(row,1, report.clouds);
+  renderCell(row,2, report.windSpeed);
+  renderCell(row,3, report.windDirection);
+  renderCell(row,4, report.visibility);
+  renderCell(row,5, report.humidity);
+}
+async function fetchWeather() {
+  let result = "Success"
+  const location = document.getElementById("location-id").value;
+  let weather = await readWeather(location);
+  if (weather != null) {
     const report = {
       feelsLike : Math.round(weather.main.feels_like -273.15),
       clouds : weather.weather[0].description,
@@ -35,5 +41,10 @@ function renderCell(row, col, value) {
       visibility: weather.visibility/1000,
       humidity : weather.main.humidity
     }
-    renderWeather(report)
+      renderWeather(report)
+    } else {
+    result = "Unknown Location";
   }
+  resultElement = document.getElementById("result-msg");
+  resultElement.textContent = result;
+}
